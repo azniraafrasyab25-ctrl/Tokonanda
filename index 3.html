@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nanda Afrasyab Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f5f6fb;--card:#fff;--ink:#16182e;--mut:#6b6f8a;--line:#e3e5f0;--acc:#4b3fe0;--ok:#0f9d73;--warn:#d98a00;--bad:#d4443a}
+@media(prefers-color-scheme:dark){:root{--bg:#10111d;--card:#191b2d;--ink:#eceefb;--mut:#9a9eb9;--line:#2b2e47;--acc:#8b83ff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'Plus Jakarta Sans',system-ui,sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header b{font-weight:800;font-size:18px}header a{color:var(--mut);margin-right:12px;text-decoration:none}
+.wrap{max-width:1080px;margin:0 auto;padding:20px}.narrow{max-width:380px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:16px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}.pad{padding:14px}
+.img{aspect-ratio:4/3;background:var(--line) center/cover}
+h2,h3{margin:.2em 0}.mut,small{color:var(--mut)}.row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:8px 0}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:10px;padding:9px 14px;font:600 14px inherit;cursor:pointer}
+.btn:disabled{opacity:.4;cursor:not-allowed}.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}.btn.sm{padding:5px 10px;font-size:12px}.full{width:100%;display:block;text-align:center;text-decoration:none;margin-top:10px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:6px 14px;cursor:pointer;font:inherit}.chip.on{background:var(--ink);color:var(--bg)}
+input,select,textarea{width:100%;padding:10px;margin:5px 0;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
+input[type=checkbox]{width:auto}label{font-size:13px;color:var(--mut)}
+.ov{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.box{background:var(--card);border-radius:16px;padding:20px;width:100%;max-width:440px;max-height:90vh;overflow:auto}
+.x{background:none;border:0;color:var(--mut);cursor:pointer;font:inherit}.err{color:var(--bad)}
+.scroll{overflow-x:auto;margin-top:14px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.tag{padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;color:#fff}.tag.paid{background:var(--ok)}.tag.pending{background:var(--warn)}.tag.failed{background:var(--bad)}
+.logo{width:48px;height:48px;border-radius:12px;background:var(--line) center/cover;flex:none}.stk{font-weight:600;font-size:13px}.stk.ok{color:var(--ok)}.stk.no{color:var(--bad)}
+.mini{width:110px;padding:6px;margin:0}
+.hero{background:#0f1124;color:#eef0ff;padding:44px 20px 40px}.hero>div{max-width:1080px;margin:0 auto}.hero h1{font-size:clamp(32px,7vw,54px);line-height:1.08;font-weight:800;margin:0 0 16px;max-width:640px}.hero p{color:#a9aed6;font-size:17px;max-width:560px;margin:0 0 24px}.hero .cta{background:#ffcb45;color:#1a1500;border:0;border-radius:12px;padding:14px 22px;font-family:inherit;font-weight:600;font-size:16px;text-decoration:underline;cursor:pointer}.hero ul{list-style:none;padding:0;margin:22px 0 0;display:flex;flex-wrap:wrap;gap:10px 22px;color:#a9aed6}.hero li:before{content:'\2714';color:#7b7bff;margin-right:8px}
+.pay .row{background:var(--bg);padding:8px 10px;border-radius:10px;margin:6px 0}
+pre{white-space:pre-wrap;background:var(--bg);padding:10px;border-radius:10px;font:inherit}
+</style></head><body><div id="app"></div>
+<script>
+/* ====== ISI BAGIAN INI ====== */
+const SUPABASE_URL = 'https://oumuxkanxtnhxfqoqsvr.supabase.co';        // contoh: https://xxxx.supabase.co
+const SUPABASE_KEY = 'sb_publishable_fBLK8yW0xPTOJA4tDvsefQ_alWqX-z8';        // anon public key (Project Settings > API)
+const STORE = 'Nanda Afrasyab Store';
+const WA = '6283874965131';                  // nomor WhatsApp admin, format 628xxxxxxxxxx (opsional)
+const QRIS_IMG = 'qris.jpg';    // file gambar QRIS, taruh di folder yang sama dengan index.html
+const BANK_INFO = 'SeaBank\n901934689667\na.n. Abel Santoso Nanda Arinza';
+const EWALLET_INFO = 'GoPay\n0851-2274-7515\na.n. Abel Santoso Nanda Arinza';
+/* =========================== */
+
+const $=s=>document.querySelector(s), rp=n=>'Rp'+Number(n||0).toLocaleString('id-ID');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const app=$('#app'), toast=m=>alert(m);
+let db,P=[],O=[],L=[],B=[],S={},cart={},cat='Semua',tab='produk',cats=[];
+const modal=h=>{let m=$('#modal');m.innerHTML=`<div class="ov" onclick="if(event.target==this)this.remove()"><div class="box">${h}<button class="x full" onclick="$('.ov').remove()">Tutup</button></div></div>`};
+
+function route(){
+  if(!SUPABASE_URL||!SUPABASE_KEY){app.innerHTML='<div class="wrap narrow"><div class="card pad"><h2>Belum terhubung</h2><p>Isi SUPABASE_URL dan SUPABASE_KEY di bagian atas script pada file index.html.</p></div></div>';return}
+  db=db||supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  location.hash.startsWith('#/admin')?admin():store();
+}
+addEventListener('hashchange',route);route();
+
+/* ---------- TOKO ---------- */
+async function loadStore(){
+  const [a,b]=await Promise.all([db.from('products').select('*').eq('active',true).order('created_at',{ascending:false}),db.from('settings').select('*')]);
+  P=a.data||[];S=Object.fromEntries((b.data||[]).map(r=>[r.key,r.value]));dflt();
+  const bs=await db.rpc('best_sellers',{p_limit:1});B=(bs.data||[]).map(x=>({p:P.find(q=>q.id==x.id),sold:x.sold})).filter(x=>x.p);
+}
+async function store(){app.innerHTML='<div class="wrap">Memuat produk…</div>';await loadStore();drawStore()}
+function setCat(i){cat=cats[i];drawStore()}
+function drawStore(){
+  cats=['Semua',...new Set(P.map(p=>p.category).filter(Boolean))];
+  const list=P.filter(p=>cat=='Semua'||p.category==cat),n=Object.values(cart).reduce((a,b)=>a+b,0);
+  app.innerHTML=`<header><b>${esc(STORE)}</b><span><a href="#/admin">Admin</a><button class="btn ghost" onclick="cekPesanan()">Cek pesanan</button> <button class="btn" onclick="openCart()">Keranjang (${n})</button></span></header>
+  <section class="hero"><div><h1>Aplikasi premium, aktif dalam hitungan menit.</h1><p>Pilih aplikasi, bayar lewat transfer atau e-wallet, lalu terima akun atau kode lisensi langsung di WhatsApp.</p><button class="cta" onclick="document.getElementById('katalog').scrollIntoView({behavior:'smooth'})">Lihat semua aplikasi</button><ul><li>Garansi 30 hari</li><li>Dukungan via WhatsApp</li>${P.length?`<li>Harga mulai ${rp(Math.min(...P.map(p=>p.price))).replace('Rp','Rp ')}</li>`:''}</ul></div></section>
+  <div class="wrap"><div id="best">${best()}</div><div class="chips" id="katalog">${cats.map((c,i)=>`<button class="chip ${c==cat?'on':''}" onclick="setCat(${i})">${esc(c)}</button>`).join('')}</div>
+  <div class="grid">${list.map(p=>`<div class="card pad"><div class="row" style="justify-content:flex-start;gap:12px"><div class="logo" style="background-image:url('${esc(p.image_url)}')"></div><div><h3>${esc(p.name)}</h3><small>${esc(p.category)} | Kode ${esc(p.sku)}</small></div></div><p class="mut">${esc(p.description)}</p><small>Masa aktif ${p.duration_days} hari</small><br><small class="stk ${p.stock>0?'ok':'no'}">${p.stock>0?'Stok tersedia, sisa '+p.stock:'Stok habis'}</small><div class="row"><b>${rp(p.price)}</b><button class="btn sm" ${p.stock<1?'disabled':''} onclick="add('${p.id}')">${p.stock<1?'Stok habis':'Tambah ke keranjang'}</button></div></div>`).join('')||'<p>Belum ada produk.</p>'}</div></div><div id="modal"></div>`;
+}
+function add(id){const p=P.find(x=>x.id==id);if((cart[id]||0)<p.stock)cart[id]=(cart[id]||0)+1;drawStore()}
+function del(id){delete cart[id];drawStore();openCart()}
+function openCart(){
+  const it=Object.entries(cart).map(([id,q])=>({p:P.find(x=>x.id==id),q})).filter(i=>i.p),tot=it.reduce((a,i)=>a+i.p.price*i.q,0);
+  modal(`<h2>Keranjang</h2>${it.map(i=>`<div class="row"><span>${esc(i.p.name)} × ${i.q}</span><span>${rp(i.p.price*i.q)} <button class="x" onclick="del('${i.p.id}')">Hapus</button></span></div>`).join('')||'<p class="mut">Keranjang masih kosong.</p>'}
+  ${it.length?`<div class="row"><b>Total</b><b>${rp(tot)}</b></div><input id="cn" placeholder="Nama"><input id="cc" placeholder="WhatsApp atau email"><label>Metode pembayaran</label><select id="pm"><option value="qris">QRIS</option><option value="bank">Transfer Bank</option><option value="ewallet">E-Wallet (DANA, OVO, GoPay)</option></select><button class="btn full" onclick="checkout()">Buat pesanan</button>`:''}`);
+}
+async function checkout(){
+  const name=$('#cn').value.trim(),contact=$('#cc').value.trim(),m=$('#pm').value;
+  if(!name||!contact)return toast('Isi nama dan kontak dulu.');
+  const {data,error}=await db.rpc('place_order',{p_name:name,p_contact:contact,p_method:m,p_items:Object.entries(cart).map(([id,qty])=>({id,qty}))});
+  if(error)return toast(error.message);
+  cart={};await loadStore();drawStore();
+  const info=m=='qris'?(S.qris_image?`<img src="${esc(S.qris_image)}" style="max-width:100%">`:'<p>QRIS belum diatur admin.</p>'):`${payInfo(m=='bank'?S.bank_info:S.ewallet_info)}`;
+  const no=data.id.slice(0,8);
+  modal(`<h2>Pesanan dibuat</h2><p>No. pesanan <b>${no}</b><br>Subtotal ${rp(data.subtotal)} + kode unik <b>${data.unique_code}</b><br>Transfer tepat <b style="font-size:20px">${rp(data.total)}</b> (3 digit terakhir harus sama)</p>${info}<p><b>Penting:</b> setelah membayar, kirim bukti transfer ke WhatsApp admin${WA?' (+'+WA+')':''} dan sebutkan nomor pesanan <b>${no}</b>. Lisensi dikirim 2 menit setelah pembayaran dikonfirmasi, lihat di menu Cek pesanan.</p>${WA?`<a class="btn full" target="_blank" href="https://wa.me/${WA}?text=${encodeURIComponent('Halo, ini bukti transfer pesanan '+no+' sebesar '+rp(data.total))}">Kirim bukti transfer via WhatsApp</a>`:''}`);
+}
+
+/* ---------- ADMIN ---------- */
+async function admin(){
+  const {data}=await db.auth.getSession();
+  if(!data.session)return loginView();
+  const r=await db.rpc('is_admin');
+  if(!r.data){await db.auth.signOut();return loginView('Akun ini bukan admin.')}
+  drawAdmin();
+}
+function loginView(msg=''){app.innerHTML=`<div class="wrap narrow"><div class="card pad"><h2>Login admin</h2><p class="err">${esc(msg)}</p><input id="em" placeholder="Email atau Token"><input id="pw" type="password" placeholder="Password (kosongkan jika pakai token karyawan)"><button class="btn full" onclick="login()">Masuk</button><p><a href="#/">Kembali ke toko</a></p></div></div>`}
+async function login(){let id=$('#em').value.trim(),pw=$('#pw').value;
+  if(!id.includes('@')){const r=await db.rpc('token_email',{p_token:id});if(!r.data)return loginView('Email atau token tidak dikenal.');pw=pw||id;id=r.data}
+  const {error}=await db.auth.signInWithPassword({email:id,password:pw});error?loginView('Login gagal. Periksa email/token dan password.'):admin()}
+async function logout(){await db.auth.signOut();loginView()}
+async function drawAdmin(){
+  const [o,p,s,l]=await Promise.all([db.from('orders').select('*,order_items(*)').order('created_at',{ascending:false}),db.from('products').select('*').order('created_at',{ascending:false}),db.from('settings').select('*'),db.from('licenses').select('*').order('created_at',{ascending:false})]);
+  L=l.data||[];O=o.data||[];P=p.data||[];S=Object.fromEntries((s.data||[]).map(r=>[r.key,r.value]));dflt();
+  const T=[['produk','Produk'],['rekap','Rekap penjualan'],['lisensi','Lisensi terjual'],['bayar','Pembayaran']];
+  app.innerHTML=`<header><b>Dashboard admin</b><span><a href="#/">Lihat toko</a><button class="btn ghost sm" onclick="logout()">Keluar</button></span></header><div class="wrap"><div class="chips">${T.map(t=>`<button class="chip ${tab==t[0]?'on':''}" onclick="tab='${t[0]}';drawAdmin()">${t[1]}</button>`).join('')}</div>${tab=='rekap'?rekap():tab=='produk'?produk():tab=='lisensi'?lisensi():bayar()}</div><div id="modal"></div>`;
+}
+function rekap(){
+  const paid=O.filter(o=>o.payment_status=='paid'),pend=O.filter(o=>o.payment_status=='pending');
+  const st=(l,v)=>`<div class="card pad"><small>${l}</small><h2>${v}</h2></div>`;
+  const meth='<div class="grid4">'+['qris','bank','ewallet'].map(m=>{const x=paid.filter(o=>o.payment_method==m);return st({qris:'QRIS',bank:'Transfer Bank',ewallet:'E-Wallet'}[m],rp(x.reduce((a,o)=>a+o.total,0))+'<br><small>'+x.length+' transaksi berhasil</small>')}).join('')+'</div>';
+  return `<div class="grid4">${st('Omzet (lunas)',rp(paid.reduce((a,o)=>a+o.total,0)))}${st('Total pesanan',O.length)}${st('Transaksi berhasil',paid.length)}${st('Transaksi pending',pend.length)}</div>
+  ${meth}<button class="btn" onclick="exportXlsx()">Ekspor ke Excel</button><div class="card scroll"><table><tr><th>ID</th><th>Tanggal</th><th>Pelanggan</th><th>Item</th><th>Kode unik</th><th>Total</th><th>Metode</th><th>Status</th><th></th></tr>${O.map(o=>`<tr><td>${o.id.slice(0,8)}</td><td>${new Date(o.created_at).toLocaleString('id-ID')}</td><td>${esc(o.customer_name)}<br><small>${esc(o.customer_contact)}</small></td><td>${o.order_items.map(i=>esc(i.product_name)+' ×'+i.qty).join('<br>')}</td><td>${o.unique_code}</td><td>${rp(o.total)}</td><td>${{qris:'QRIS',bank:'Transfer Bank',ewallet:'E-Wallet'}[o.payment_method]}</td><td><span class="tag ${o.payment_status}">${{paid:'Berhasil',pending:'Pending',failed:'Batal'}[o.payment_status]}</span></td><td>${o.payment_status=='pending'?`<button class="btn sm" onclick="setPay('${o.id}','paid')">Tandai lunas</button> <button class="btn sm ghost" onclick="setPay('${o.id}','failed')">Batalkan</button>`:''}</td></tr>`).join('')||'<tr><td colspan=9>Belum ada pesanan.</td></tr>'}</table></div>`;
+}
+async function setPay(id,v){const {error}=await db.from('orders').update({payment_status:v}).eq('id',id);if(error)toast(error.message);drawAdmin()}
+function produk(){
+  return `<div class="row"><div><h2>Kelola produk</h2><small>Ubah harga dan stok langsung di tabel lalu klik Simpan. Klik Edit lengkap untuk nama, kategori, deskripsi, masa aktif, dan logo.</small></div><button class="btn" onclick="prodForm()">+ Tambah aplikasi</button></div><div class="card scroll"><table><tr><th></th><th>Kode</th><th>Nama</th><th>Kategori</th><th>Harga</th><th>Stok</th><th>Aktif</th><th></th></tr>${P.map(p=>`<tr><td><img src="${esc(p.image_url)}" width=40 height=40 style="object-fit:cover;border-radius:6px" alt=""></td><td>${esc(p.sku)}</td><td>${esc(p.name)}</td><td>${esc(p.category)}</td><td><input class="mini" id="hp_${p.id}" type="number" value="${p.price}"></td><td><input class="mini" id="hs_${p.id}" type="number" value="${p.stock}"></td><td>${p.active?'Ya':'Tidak'}</td><td style="white-space:nowrap"><button class="btn sm" onclick="quick('${p.id}')">Simpan</button> <button class="btn sm ghost" onclick="prodForm('${p.id}')">Edit lengkap</button> <button class="btn sm ghost" onclick="delP('${p.id}')">Hapus</button></td></tr>`).join('')||'<tr><td colspan=8>Belum ada produk. Tambahkan yang pertama.</td></tr>'}</table></div>`;
+}
+async function quick(id){const {error}=await db.from('products').update({price:+$('#hp_'+id).value,stock:+$('#hs_'+id).value}).eq('id',id);if(error)toast(error.message);drawAdmin()}
+function prodForm(id){
+  const p=P.find(x=>x.id==id)||{active:true,stock:0,price:0};
+  modal(`<h2>${id?'Edit':'Tambah'} produk</h2><input id="f_n" placeholder="Nama produk" value="${esc(p.name)}"><input id="f_c" placeholder="Kategori (mis. Streaming)" value="${esc(p.category)}"><input id="f_p" type="number" placeholder="Harga" value="${p.price}"><input id="f_s" type="number" placeholder="Stok" value="${p.stock}"><input id="f_h" type="number" placeholder="Masa aktif (hari)" value="${p.duration_days||30}"><textarea id="f_d" placeholder="Deskripsi">${esc(p.description)}</textarea><label>Logo aplikasi</label><input id="f_i" type="file" accept="image/*"><label><input id="f_a" type="checkbox" ${p.active?'checked':''}> Tampilkan di toko</label><button class="btn full" onclick="saveP('${id||''}')">Simpan produk</button>`);
+}
+async function up(f){const path=Date.now()+'-'+f.name.replace(/[^\w.]/g,'_');const {error}=await db.storage.from('products').upload(path,f);if(error)throw error;return db.storage.from('products').getPublicUrl(path).data.publicUrl}
+async function saveP(id){
+  try{const f=$('#f_i').files[0],row={name:$('#f_n').value,category:$('#f_c').value,price:+$('#f_p').value,stock:+$('#f_s').value,duration_days:+$('#f_h').value,description:$('#f_d').value,active:$('#f_a').checked};
+    if(f)row.image_url=await up(f);
+    const {error}=await(id?db.from('products').update(row).eq('id',id):db.from('products').insert(row));if(error)throw error;drawAdmin()}catch(e){toast(e.message)}
+}
+async function delP(id){if(!confirm('Hapus produk ini?'))return;const {error}=await db.from('products').delete().eq('id',id);if(error)toast(error.message);drawAdmin()}
+function bayar(){
+  return `<div class="card pad"><h3>Pengaturan pembayaran</h3><label>Gambar QRIS</label><br>${S.qris_image?`<img src="${esc(S.qris_image)}" width=140 alt="QRIS">`:''}<input id="s_q" type="file" accept="image/*"><label>Rekening bank (bank, nomor, atas nama)</label><textarea id="s_b" rows=3>${esc(S.bank_info)}</textarea><label>E-wallet (DANA, OVO, GoPay + nomor)</label><textarea id="s_e" rows=3>${esc(S.ewallet_info)}</textarea><button class="btn" onclick="saveS()">Simpan pengaturan</button></div>`;
+}
+async function saveS(){
+  try{const rows=[{key:'bank_info',value:$('#s_b').value},{key:'ewallet_info',value:$('#s_e').value}],f=$('#s_q').files[0];
+    if(f)rows.push({key:'qris_image',value:await up(f)});
+    const {error}=await db.from('settings').upsert(rows);if(error)throw error;toast('Tersimpan.');drawAdmin()}catch(e){toast(e.message)}
+}
+setInterval(async()=>{if(!db||!$('#best'))return;const bs=await db.rpc('best_sellers',{p_limit:1});B=(bs.data||[]).map(x=>({p:P.find(q=>q.id==x.id),sold:x.sold})).filter(x=>x.p);$('#best').innerHTML=best()},20000);
+function dflt(){S.qris_image=S.qris_image||QRIS_IMG;S.bank_info=S.bank_info||BANK_INFO;S.ewallet_info=S.ewallet_info||EWALLET_INFO}
+function payInfo(t){if(!t)return '<p>Info pembayaran belum diatur admin.</p>';
+  return '<div class="pay">'+t.split('\n').map(l=>{const m=l.match(/\d[\d\- ]{6,}\d/);return '<div class="row"><span>'+esc(l)+'</span>'+(m?'<button class="btn sm" onclick="salin(this,\''+m[0].replace(/\D/g,'')+'\')">Salin</button>':'')+'</div>'}).join('')+'</div>'}
+function salin(b,t){const ok=()=>{b.textContent='Tersalin';setTimeout(()=>b.textContent='Salin',1800)};
+  const fb=()=>{const x=document.createElement('textarea');x.value=t;document.body.appendChild(x);x.select();try{document.execCommand('copy');ok()}catch(e){toast('Salin manual: '+t)}x.remove()};
+  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(ok,fb);else fb()}
+function best(){return B.length?`<h2>Lisensi aktif <small>(terlaris saat ini, diperbarui otomatis)</small></h2><div class="card scroll" style="margin-bottom:20px"><table><tr><th>Nama aplikasi</th><th>Kode unik</th><th>Masa aktif</th><th>Dikirim</th><th>Terjual</th></tr>${B.map((x,i)=>`<tr><td><span class="row" style="justify-content:flex-start;gap:10px;margin:0"><span class="logo" style="width:32px;height:32px;background-image:url('${esc(x.p.image_url)}')"></span><b>${esc(x.p.name)}</b>${i==0?' <span class="tag paid">Terlaris</span>':''}</span></td><td>${esc(x.p.sku)}</td><td>${x.p.duration_days} hari</td><td>2 menit setelah bayar</td><td>${x.sold}x</td></tr>`).join('')}</table></div>`:''}
+function lisensi(){const now=Date.now(),A=L.filter(l=>new Date(l.expires_at)>now),t=d=>new Date(d).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),dt=d=>new Date(d).toLocaleDateString('id-ID');
+  return `<div class="card scroll"><table><tr><th>Nama aplikasi</th><th>Kode unik</th><th>Masa aktif</th><th>Pesanan</th><th>Dikirim (2 menit setelah bayar)</th></tr>${A.map(l=>`<tr><td>${esc(l.product_name)}</td><td><b>${esc(l.code)}</b></td><td>${dt(l.created_at)} s/d ${dt(l.expires_at)}</td><td>${l.order_id.slice(0,8)}</td><td>${new Date(l.deliver_at)<=now?'Terkirim '+t(l.deliver_at):'Terjadwal '+t(l.deliver_at)}</td></tr>`).join('')||'<tr><td colspan=5>Belum ada lisensi aktif. Lisensi muncul otomatis saat pesanan ditandai lunas.</td></tr>'}</table></div>`}
+function exportXlsx(){const lb={qris:'QRIS',bank:'Transfer Bank',ewallet:'E-Wallet'},st={paid:'Berhasil',pending:'Pending',failed:'Batal'};
+  const rows=O.map(o=>({'No Pesanan':o.id.slice(0,8),Tanggal:new Date(o.created_at).toLocaleString('id-ID'),Pelanggan:o.customer_name,Kontak:o.customer_contact,Item:o.order_items.map(i=>i.product_name+' x'+i.qty).join(', '),Subtotal:o.subtotal,'Kode Unik':o.unique_code,Total:o.total,Metode:lb[o.payment_method],Status:st[o.payment_status]}));
+  const per=Object.keys(lb).map(m=>{const x=O.filter(o=>o.payment_method==m&&o.payment_status=='paid');return{Metode:lb[m],Transaksi:x.length,Omzet:x.reduce((a,o)=>a+o.total,0)}});
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Penjualan');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(per),'Per Metode');
+  XLSX.writeFile(wb,'rekap-penjualan-'+new Date().toISOString().slice(0,10)+'.xlsx')}
+function cekPesanan(){modal(`<h2>Cek pesanan</h2><input id="co" placeholder="No. pesanan (8 karakter)"><input id="cq" placeholder="Kontak yang dipakai saat memesan"><button class="btn full" onclick="doCek()">Cek</button><div id="cr"></div>`)}
+async function doCek(){const {data}=await db.rpc('check_order',{p_no:$('#co').value.trim(),p_contact:$('#cq').value.trim()});
+  $('#cr').innerHTML=!data?'<p class="err">Pesanan tidak ditemukan.</p>':`<p>Status: <b>${{paid:'Lunas',pending:'Menunggu pembayaran',failed:'Dibatalkan'}[data.status]}</b></p>`+(data.status=='paid'?(data.licenses.length?data.licenses.map(l=>`<div class="card pad"><b>${esc(l.app)}</b><br>Kode: <b>${esc(l.code)}</b><br><small>Aktif sampai ${new Date(l.expires_at).toLocaleDateString('id-ID')}</small></div>`).join(''):'<p>Lisensi dikirim 2 menit setelah pembayaran dikonfirmasi. Coba cek lagi sebentar.</p>'):'')}
+</script></body></html>
